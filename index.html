@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+  body {
+    font-family: Arial;
+    text-align: center;
+    background-color: #f7f7f7;
+  }
+  
+  button {
+    font-size: 20px;
+    padding: 10px 20px;
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    font-size: 20px;
+    margin: 5px 0;
+  }
+    h1 {
+  font-size: 32px;
+  margin-top: 20px;
+}
+
+p {
+  font-size: 24px;
+}
+
+button {
+  font-size: 28px;
+  padding: 15px 30px;
+  margin: 20px 0;
+}
+
+h2 {
+  font-size: 28px;
+  margin-top: 40px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+li {
+  font-size: 22px;
+  margin: 10px 0;
+  text-align: left;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+img {
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+</style>
+
+  <title>클릭 배틀!</title>
+</head>
+<body>
+
+<h1>클릭 배틀!</h1>
+<p>클릭 수: <span id="count">0</span></p>
+<button onclick="clickButton()">클릭!</button>
+<h2>나라별 랭킹</h2>
+<ul id="ranking"></ul>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// 파이어베이스 설정
+const firebaseConfig = {
+  databaseURL: "https://globalclick-63086-default-rtdb.asia-southeast1.firebasedatabase.app/"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+  
+  
+  
+
+let country = "Unknown";
+let countryCode = "UN";
+
+fetch('https://ipapi.co/json/')
+  .then(response => response.json())
+  .then(data => {
+    country = data.country_name;
+    countryCode = data.country_code;
+    console.log("당신의 나라는:", country, countryCode);
+  });
+
+
+let myClickCount = parseInt(localStorage.getItem("myClickCount")) || 0; // 내가 누른 수 저장용
+
+document.getElementById("count").innerText = myClickCount;
+
+  
+  
+
+function clickButton() {
+  const countryRef = db.ref("countries/" + country);
+
+  countryRef.get().then((snapshot) => {
+    let currentCount = snapshot.val() || 0;
+    countryRef.set(currentCount + 1);
+  });
+  // 내가 누른 수도 +1
+  myClickCount = myClickCount + 1;
+  document.getElementById("count").innerText = myClickCount;
+  localStorage.setItem("myClickCount", myClickCount);
+  
+  
+}
+// 나라별 랭킹 가져오기
+const countriesRef = db.ref("countries");
+
+countriesRef.on("value", (snapshot) => {
+  const countries = snapshot.val() || {};
+  const rankingList = document.getElementById("ranking");
+  
+  // 정렬하기
+  const sortedCountries = Object.entries(countries).sort((a, b) => b[1] - a[1]);
+
+  // 화면에 보여주기
+  rankingList.innerHTML = ""; // 일단 싹 지우기
+  sortedCountries.forEach(([countryName, clicks], index) => {
+    const listItem = document.createElement("li");
+    const flag = countryNameToFlag(countryName);
+listItem.innerHTML = `${index + 1}위 ${flag} ${countryName} - ${clicks}`;
+
+    rankingList.appendChild(listItem);
+  });
+});
+
+  
+  function countryNameToFlag(name) {
+  const countryCodes = {
+    "South Korea": "kr",
+    "United States": "us",
+    "Japan": "jp",
+    "China": "cn",
+    "United Kingdom": "gb",
+    "Germany": "de",
+    "France": "fr",
+    "Unknown": "un"
+    // 필요하면 더 추가 가능
+  };
+
+  const code = countryCodes[name] || "un";
+
+  return `<img src="https://flagcdn.com/24x18/${code}.png" style="vertical-align:middle;">`;
+}
+
+
+
+</script>
+
+</body>
+</html>
