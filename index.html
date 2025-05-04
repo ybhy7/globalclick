@@ -7,64 +7,64 @@
     text-align: center;
     background-color: #f7f7f7;
   }
-  
+
   button {
     font-size: 20px;
     padding: 10px 20px;
   }
-  
+
   ul {
     list-style-type: none;
     padding: 0;
   }
-  
+
   li {
     font-size: 20px;
     margin: 5px 0;
   }
-    h1 {
-  font-size: 32px;
-  margin-top: 20px;
-}
 
-p {
-  font-size: 24px;
-}
+  h1 {
+    font-size: 32px;
+    margin-top: 20px;
+  }
 
-button {
-  font-size: 28px;
-  padding: 15px 30px;
-  margin: 20px 0;
-}
+  p {
+    font-size: 24px;
+  }
 
-h2 {
-  font-size: 28px;
-  margin-top: 40px;
-}
+  button {
+    font-size: 28px;
+    padding: 15px 30px;
+    margin: 20px 0;
+  }
 
-ul {
-  list-style-type: none;
-  padding: 0;
-  max-width: 400px;
-  margin: 0 auto;
-}
+  h2 {
+    font-size: 28px;
+    margin-top: 40px;
+  }
 
-li {
-  font-size: 22px;
-  margin: 10px 0;
-  text-align: left;
-  background: white;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
-}
+  ul {
+    list-style-type: none;
+    padding: 0;
+    max-width: 400px;
+    margin: 0 auto;
+  }
 
-img {
-  margin-right: 10px;
-  vertical-align: middle;
-}
+  li {
+    font-size: 22px;
+    margin: 10px 0;
+    text-align: left;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
 
-</style>
+  img {
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  </style>
 
   <title>Global Click Battle!</title>
 </head>
@@ -86,11 +86,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.database();
-  
-  
-  
 
 let country = "Unknown";
 let countryCode = "UN";
@@ -100,74 +96,56 @@ fetch('https://ipapi.co/json/')
   .then(data => {
     country = data.country_name;
     countryCode = data.country_code;
-    console.log("당신의 나라는:", country, countryCode);
+    console.log("country:", country, countryCode);
   });
 
-
-let myClickCount = parseInt(localStorage.getItem("myClickCount")) || 0; // 내가 누른 수 저장용
-
+let myClickCount = parseInt(localStorage.getItem("myClickCount")) || 0;
 document.getElementById("count").innerText = myClickCount;
-
-  
-  
 
 function clickButton() {
   const countryRef = db.ref("countries/" + country);
-
   countryRef.get().then((snapshot) => {
     let currentCount = snapshot.val() || 0;
     countryRef.set(currentCount + 1);
   });
-  // 내가 누른 수도 +1
-  myClickCount = myClickCount + 1;
+
+  myClickCount += 1;
   document.getElementById("count").innerText = myClickCount;
   localStorage.setItem("myClickCount", myClickCount);
-  
-  
 }
-// 나라별 랭킹 가져오기
+
+const countryNameToFlagData = {
+  "Afghanistan": "AF", "Albania": "AL", "Algeria": "DZ", "Andorra": "AD", "Angola": "AO", "Antigua and Barbuda": "AG", "Argentina": "AR", "Armenia": "AM", "Australia": "AU", "Austria": "AT", "Azerbaijan": "AZ", "Bahamas": "BS", "Bahrain": "BH", "Bangladesh": "BD", "Barbados": "BB", "Belarus": "BY", "Belgium": "BE", "Belize": "BZ", "Benin": "BJ", "Bhutan": "BT", "Bolivia": "BO", "Bosnia and Herzegovina": "BA", "Botswana": "BW", "Brazil": "BR", "Brunei": "BN", "Bulgaria": "BG", "Burkina Faso": "BF", "Burundi": "BI", "Cabo Verde": "CV", "Cambodia": "KH", "Cameroon": "CM", "Canada": "CA", "Central African Republic": "CF", "Chad": "TD", "Chile": "CL", "China": "CN", "Colombia": "CO", "Comoros": "KM", "Congo (Congo-Brazzaville)": "CG", "Costa Rica": "CR", "Croatia": "HR", "Cuba": "CU", "Cyprus": "CY", "Czechia": "CZ", "Democratic Republic of the Congo": "CD", "Denmark": "DK", "Djibouti": "DJ", "Dominica": "DM", "Dominican Republic": "DO", "Ecuador": "EC", "Egypt": "EG", "El Salvador": "SV", "Equatorial Guinea": "GQ", "Eritrea": "ER", "Estonia": "EE", "Eswatini": "SZ", "Ethiopia": "ET", "Fiji": "FJ", "Finland": "FI", "France": "FR", "Gabon": "GA", "Gambia": "GM", "Georgia": "GE", "Germany": "DE", "Ghana": "GH", "Greece": "GR", "Grenada": "GD", "Guatemala": "GT", "Guinea": "GN", "Guinea-Bissau": "GW", "Guyana": "GY", "Haiti": "HT", "Honduras": "HN", "Hungary": "HU", "Iceland": "IS", "India": "IN", "Indonesia": "ID", "Iran": "IR", "Iraq": "IQ", "Ireland": "IE", "Israel": "IL", "Italy": "IT", "Jamaica": "JM", "Japan": "JP", "Jordan": "JO", "Kazakhstan": "KZ", "Kenya": "KE", "Kiribati": "KI", "Kuwait": "KW", "Kyrgyzstan": "KG", "Laos": "LA", "Latvia": "LV", "Lebanon": "LB", "Lesotho": "LS", "Liberia": "LR", "Libya": "LY", "Liechtenstein": "LI", "Lithuania": "LT", "Luxembourg": "LU", "Madagascar": "MG", "Malawi": "MW", "Malaysia": "MY", "Maldives": "MV", "Mali": "ML", "Malta": "MT", "Marshall Islands": "MH", "Mauritania": "MR", "Mauritius": "MU", "Mexico": "MX", "Micronesia": "FM", "Moldova": "MD", "Monaco": "MC", "Mongolia": "MN", "Montenegro": "ME", "Morocco": "MA", "Mozambique": "MZ", "Myanmar (Burma)": "MM", "Namibia": "NA", "Nauru": "NR", "Nepal": "NP", "Netherlands": "NL", "New Zealand": "NZ", "Nicaragua": "NI", "Niger": "NE", "Nigeria": "NG", "North Korea": "KP", "North Macedonia": "MK", "Norway": "NO", "Oman": "OM", "Pakistan": "PK", "Palau": "PW", "Palestine State": "PS", "Panama": "PA", "Papua New Guinea": "PG", "Paraguay": "PY", "Peru": "PE", "Philippines": "PH", "Poland": "PL", "Portugal": "PT", "Qatar": "QA", "Romania": "RO", "Russia": "RU", "Rwanda": "RW", "Saint Kitts and Nevis": "KN", "Saint Lucia": "LC", "Saint Vincent and the Grenadines": "VC", "Samoa": "WS", "San Marino": "SM", "Sao Tome and Principe": "ST", "Saudi Arabia": "SA", "Senegal": "SN", "Serbia": "RS", "Seychelles": "SC", "Sierra Leone": "SL", "Singapore": "SG", "Slovakia": "SK", "Slovenia": "SI", "Solomon Islands": "SB", "Somalia": "SO", "South Africa": "ZA", "South Korea": "KR", "South Sudan": "SS", "Spain": "ES", "Sri Lanka": "LK", "Sudan": "SD", "Suriname": "SR", "Sweden": "SE", "Switzerland": "CH", "Syria": "SY", "Tajikistan": "TJ", "Tanzania": "TZ", "Thailand": "TH", "Timor-Leste": "TL", "Togo": "TG", "Tonga": "TO", "Trinidad and Tobago": "TT", "Tunisia": "TN", "Turkey": "TR", "Turkmenistan": "TM", "Tuvalu": "TV", "Uganda": "UG", "Ukraine": "UA", "United Arab Emirates": "AE", "United Kingdom": "GB", "United States": "US", "Uruguay": "UY", "Uzbekistan": "UZ", "Vanuatu": "VU", "Vatican City": "VA", "Venezuela": "VE", "Vietnam": "VN", "Yemen": "YE", "Zambia": "ZM", "Zimbabwe": "ZW", "Unknown": "UN"
+};
+
+function countryNameToFlag(name) {
+  const code = countryNameToFlagData[name] || "UN";
+  return `<img src="https://flagcdn.com/24x18/${code.toLowerCase()}.png" style="vertical-align:middle;">`;
+}
+
 const countriesRef = db.ref("countries");
 
 countriesRef.on("value", (snapshot) => {
   const countries = snapshot.val() || {};
   const rankingList = document.getElementById("ranking");
-  
-  // 정렬하기
-  const sortedCountries = Object.entries(countries).sort((a, b) => b[1] - a[1]);
 
-  // 화면에 보여주기
-  rankingList.innerHTML = ""; // 일단 싹 지우기
+  const allCountries = {};
+  for (const name in countryNameToFlagData) {
+    allCountries[name] = countries[name] || 0;
+  }
+
+  const sortedCountries = Object.entries(allCountries).sort((a, b) => b[1] - a[1]);
+
+  rankingList.innerHTML = "";
   sortedCountries.forEach(([countryName, clicks], index) => {
     const listItem = document.createElement("li");
     const flag = countryNameToFlag(countryName);
-listItem.innerHTML = `${index + 1}위 ${flag} ${countryName} - ${clicks}`;
-
+    listItem.innerHTML = `${index + 1} ${flag} ${countryName} - ${clicks}`;
     rankingList.appendChild(listItem);
   });
 });
-
-  
-  function countryNameToFlag(name) {
-  const countryCodes = {
-    "South Korea": "kr",
-    "United States": "us",
-    "Japan": "jp",
-    "China": "cn",
-    "United Kingdom": "gb",
-    "Germany": "de",
-    "France": "fr",
-    "Unknown": "un"
-    // 필요하면 더 추가 가능
-  };
-
-  const code = countryCodes[name] || "un";
-
-  return `<img src="https://flagcdn.com/24x18/${code}.png" style="vertical-align:middle;">`;
-}
-
-
-
 </script>
 
 </body>
 </html>
+
