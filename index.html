@@ -140,7 +140,17 @@ countriesRef.on("value", (snapshot) => {
   sortedCountries.forEach(([countryName, clicks], index) => {
     const listItem = document.createElement("li");
     const flag = countryNameToFlag(countryName);
-    listItem.innerHTML = `<span style="display:inline-block; width: 250px;">${index + 1} ${flag} ${countryName}</span><span style="float:right;">${clicks.toLocaleString()}</span>`;
+    listItem.innerHTML = `
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+      ${index + 1} ${flag} ${countryName}
+    </div>
+    <div style="min-width: 80px; text-align: right;">
+      ${clicks.toLocaleString()}
+    </div>
+  </div>
+`;
+
 
     rankingList.appendChild(listItem);
   });
