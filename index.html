@@ -27,10 +27,11 @@
     background: white;
     padding: 15px 20px;
     border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background-color 0.3s;
   }
 
   .country-info {
@@ -44,7 +45,7 @@
     font-weight: bold;
     width: 40px;
     text-align: right;
-    color: #555;
+    color: #777;
   }
 
   .country-name {
@@ -63,6 +64,11 @@
     text-align: right;
     word-break: break-word;
   }
+
+  .gold { background-color: #ffe082; }
+  .silver { background-color: #cfd8dc; }
+  .bronze { background-color: #ffcc80; }
+  .highlight { background-color: #b3e5fc !important; }
 
   img {
     width: 24px;
@@ -89,7 +95,6 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.database();
 
 let country = "Unknown";
@@ -107,8 +112,7 @@ document.getElementById("count").innerText = myClickCount;
 
 function clickButton() {
   const countryRef = db.ref("countries/" + country);
-
-  countryRef.get().then((snapshot) => {
+  countryRef.get().then(snapshot => {
     let currentCount = snapshot.val() || 0;
     countryRef.set(currentCount + 1);
   });
@@ -120,29 +124,12 @@ function clickButton() {
 
 const countriesRef = db.ref("countries");
 
-countriesRef.on("value", (snapshot) => {
+countriesRef.on("value", snapshot => {
   const countries = snapshot.val() || {};
   const rankingList = document.getElementById("ranking");
 
   const allCountries = {};
-  const countryList = [
-    "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas",
-    "Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei",
-    "Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia",
-    "Comoros","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czechia","Democratic Republic of the Congo","Denmark","Djibouti","Dominica","Dominican Republic",
-    "Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia",
-    "Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia",
-    "Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon",
-    "Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands",
-    "Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal",
-    "Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama",
-    "Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia",
-    "Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone",
-    "Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname",
-    "Sweden","Switzerland","Syria","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan",
-    "Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela",
-    "Vietnam","Yemen","Zambia","Zimbabwe","Unknown"
-  ];
+  const countryList = Object.keys(countryCodeMap);
 
   countryList.forEach(name => {
     allCountries[name] = countries[name] || 0;
@@ -153,30 +140,52 @@ countriesRef.on("value", (snapshot) => {
   rankingList.innerHTML = "";
   sortedCountries.forEach(([countryName, clicks], index) => {
     const listItem = document.createElement("li");
+
+    // 순위별 색
+    if(index === 0) listItem.classList.add("gold");
+    else if(index === 1) listItem.classList.add("silver");
+    else if(index === 2) listItem.classList.add("bronze");
+    else if(index < 10) listItem.style.backgroundColor = "#e0e0e0";
+
+    // 내가 속한 나라일 때
+    if(countryName === country) listItem.classList.add("highlight");
+
     listItem.innerHTML = `
-    <div class="country-info">
-      <span class="rank">${index + 1}</span>
-      ${countryNameToFlag(countryName)} <span class="country-name">${countryName}</span>
-    </div>
-    <div class="click-count">${clicks.toLocaleString()}</div>
+      <div class="country-info">
+        <span class="rank">${index + 1}</span>
+        ${countryNameToFlag(countryName)} <span class="country-name">${countryName}</span>
+      </div>
+      <div class="click-count">${clicks.toLocaleString()}</div>
     `;
+
     rankingList.appendChild(listItem);
   });
 });
 
+const countryCodeMap = {
+"Afghanistan":"af","Albania":"al","Algeria":"dz","Andorra":"ad","Angola":"ao","Antigua and Barbuda":"ag","Argentina":"ar","Armenia":"am","Australia":"au","Austria":"at","Azerbaijan":"az",
+"Bahamas":"bs","Bahrain":"bh","Bangladesh":"bd","Barbados":"bb","Belarus":"by","Belgium":"be","Belize":"bz","Benin":"bj","Bhutan":"bt","Bolivia":"bo","Bosnia and Herzegovina":"ba",
+"Botswana":"bw","Brazil":"br","Brunei":"bn","Bulgaria":"bg","Burkina Faso":"bf","Burundi":"bi","Cabo Verde":"cv","Cambodia":"kh","Cameroon":"cm","Canada":"ca","Central African Republic":"cf",
+"Chad":"td","Chile":"cl","China":"cn","Colombia":"co","Comoros":"km","Congo":"cg","Costa Rica":"cr","Croatia":"hr","Cuba":"cu","Cyprus":"cy","Czechia":"cz","Democratic Republic of the Congo":"cd",
+"Denmark":"dk","Djibouti":"dj","Dominica":"dm","Dominican Republic":"do","Ecuador":"ec","Egypt":"eg","El Salvador":"sv","Equatorial Guinea":"gq","Eritrea":"er","Estonia":"ee","Eswatini":"sz",
+"Ethiopia":"et","Fiji":"fj","Finland":"fi","France":"fr","Gabon":"ga","Gambia":"gm","Georgia":"ge","Germany":"de","Ghana":"gh","Greece":"gr","Grenada":"gd","Guatemala":"gt","Guinea":"gn",
+"Guinea-Bissau":"gw","Guyana":"gy","Haiti":"ht","Honduras":"hn","Hungary":"hu","Iceland":"is","India":"in","Indonesia":"id","Iran":"ir","Iraq":"iq","Ireland":"ie","Israel":"il","Italy":"it",
+"Jamaica":"jm","Japan":"jp","Jordan":"jo","Kazakhstan":"kz","Kenya":"ke","Kiribati":"ki","Kuwait":"kw","Kyrgyzstan":"kg","Laos":"la","Latvia":"lv","Lebanon":"lb","Lesotho":"ls","Liberia":"lr",
+"Libya":"ly","Liechtenstein":"li","Lithuania":"lt","Luxembourg":"lu","Madagascar":"mg","Malawi":"mw","Malaysia":"my","Maldives":"mv","Mali":"ml","Malta":"mt","Marshall Islands":"mh",
+"Mauritania":"mr","Mauritius":"mu","Mexico":"mx","Micronesia":"fm","Moldova":"md","Monaco":"mc","Mongolia":"mn","Montenegro":"me","Morocco":"ma","Mozambique":"mz","Myanmar":"mm",
+"Namibia":"na","Nauru":"nr","Nepal":"np","Netherlands":"nl","New Zealand":"nz","Nicaragua":"ni","Niger":"ne","Nigeria":"ng","North Korea":"kp","North Macedonia":"mk","Norway":"no",
+"Oman":"om","Pakistan":"pk","Palau":"pw","Palestine":"ps","Panama":"pa","Papua New Guinea":"pg","Paraguay":"py","Peru":"pe","Philippines":"ph","Poland":"pl","Portugal":"pt","Qatar":"qa",
+"Romania":"ro","Russia":"ru","Rwanda":"rw","Saint Kitts and Nevis":"kn","Saint Lucia":"lc","Saint Vincent and the Grenadines":"vc","Samoa":"ws","San Marino":"sm","Sao Tome and Principe":"st",
+"Saudi Arabia":"sa","Senegal":"sn","Serbia":"rs","Seychelles":"sc","Sierra Leone":"sl","Singapore":"sg","Slovakia":"sk","Slovenia":"si","Solomon Islands":"sb","Somalia":"so","South Africa":"za",
+"South Korea":"kr","South Sudan":"ss","Spain":"es","Sri Lanka":"lk","Sudan":"sd","Suriname":"sr","Sweden":"se","Switzerland":"ch","Syria":"sy","Tajikistan":"tj","Tanzania":"tz","Thailand":"th",
+"Timor-Leste":"tl","Togo":"tg","Tonga":"to","Trinidad and Tobago":"tt","Tunisia":"tn","Turkey":"tr","Turkmenistan":"tm","Tuvalu":"tv","Uganda":"ug","Ukraine":"ua","United Arab Emirates":"ae",
+"United Kingdom":"gb","United States":"us","Uruguay":"uy","Uzbekistan":"uz","Vanuatu":"vu","Vatican City":"va","Venezuela":"ve","Vietnam":"vn","Yemen":"ye","Zambia":"zm","Zimbabwe":"zw","Unknown":""
+};
+
 function countryNameToFlag(name) {
-  if(name === "Unknown") return "";
-
-  const code = nameToCode(name);
-  return `<img src="https://flagcdn.com/24x18/${code.toLowerCase()}.png">`;
-}
-
-function nameToCode(name) {
-  return name
-    .toUpperCase()
-    .replace(/ /g, "_")
-    .replace(/[^A-Z_]/g, "")
-    .slice(0, 2);
+  const code = countryCodeMap[name];
+  if(!code) return "";
+  return `<img src="https://flagcdn.com/24x18/${code}.png">`;
 }
 </script>
 
