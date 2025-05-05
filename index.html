@@ -14,7 +14,8 @@ li {font-size: 22px; margin: 10px 0; text-align: left; background: white; paddin
 .rank-item {display: flex; justify-content: space-between; align-items: center;}
 .country-info {display: flex; align-items: center; max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .country-info img {margin-right: 10px; vertical-align: middle;}
-.click-count {min-width: 100px; text-align: right; font-family: monospace;}
+.country-rank {margin-right: 10px;} /* 순위와 국기 사이 여백 추가 */
+.click-count {min-width: 100px; text-align: right; font-family: monospace; font-weight: bold;} /* 클릭수 굵게 */
 </style>
 </head>
 <body>
@@ -83,8 +84,8 @@ const countryCodes = {
 };
 
 function getFlag(code) {
-  if (code === "UN") return "";
-  return `<img src="https://flagcdn.com/24x18/${code.toLowerCase()}.png" style="vertical-align:middle;">`;
+  if (code === "UN") return `<span style="display:inline-block; width:24px; height:18px; background:#ccc; border-radius:3px; margin-right:5px;"></span>`;
+  return `<img src="https://flagcdn.com/24x18/${code.toLowerCase()}.png" style="vertical-align:middle; margin-right:5px;">`;
 }
 
 const countriesRef = db.ref("countries");
@@ -108,7 +109,7 @@ countriesRef.on("value", snapshot => {
 
     listItem.innerHTML = `
       <div class="rank-item">
-        <div class="country-info">${index + 1} ${getFlag(code)} ${countryName}</div>
+        <div class="country-info"><span class="country-rank">${index + 1}</span> ${getFlag(code)} ${countryName}</div>
         <div class="click-count">${clicks.toLocaleString()}</div>
       </div>
     `;
