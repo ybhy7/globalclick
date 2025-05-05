@@ -145,11 +145,14 @@ function updateRanking() {
       allCountries[name] = countries[name] || 0;
     });
 
-    let sortedCountries = Object.entries(allCountries).sort((a, b) => b[1] - a[1]);
+    let sortedCountries = Object.entries(allCountries).sort((a, b) => {
+      if (b[1] !== a[1]) return b[1] - a[1];
+      return a[0].localeCompare(b[0]);
+    });
+
     const myCountryIndex = sortedCountries.findIndex(([name]) => name === country);
     const myCountryClicks = sortedCountries[myCountryIndex] ? sortedCountries[myCountryIndex][1] : 0;
 
-    // 내 나라 고정 박스 영어 버전
     myCountryBox.innerHTML = `
       <div class="my-country">
         ${countryNameToFlag(country)} ${country} (Rank ${myCountryIndex + 1}) : ${myCountryClicks.toLocaleString()}
@@ -179,7 +182,7 @@ function updateRanking() {
 
 const countryCodeMap = {
 "South Korea":"kr","United States":"us","Japan":"jp","China":"cn","United Kingdom":"gb","Germany":"de","France":"fr","Italy":"it","Brazil":"br","Russia":"ru","Spain":"es","Mexico":"mx","India":"in","Canada":"ca","Australia":"au","Unknown":"un",
-// (생략) 여기에 이전에 넣은 전세계 국가 코드들 다 넣어둠. 그대로 유지하세요.
+// 생략없이 여기에 전세계 국가 코드 전부 다 넣으세요 (아까 드린 countryCodeMap 그대로 넣으면 됨)
 };
 
 function countryNameToFlag(name) {
@@ -191,4 +194,5 @@ function countryNameToFlag(name) {
 
 </body>
 </html>
+
 
