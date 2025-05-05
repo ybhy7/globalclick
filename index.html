@@ -68,6 +68,15 @@
   .silver { background-color: #cfd8dc; }
   .bronze { background-color: #ffcc80; }
 
+  .my-country {
+    background-color: white;
+    font-size: 24px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
   img {
     width: 24px;
     height: 18px;
@@ -82,6 +91,7 @@
 <p>My Click: <span id="count">0</span></p>
 <button onclick="clickButton()">Click!</button>
 <h2>Global Rank</h2>
+<div id="myCountryBox"></div>
 <ul id="ranking"></ul>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -103,6 +113,7 @@ fetch('https://ipapi.co/json/')
   .then(data => {
     country = data.country_name;
     countryCode = data.country_code;
+    updateRanking(); // 초기에도 내 나라가 바로 보이도록 실행
   });
 
 let myClickCount = parseInt(localStorage.getItem("myClickCount")) || 0;
@@ -122,68 +133,67 @@ function clickButton() {
 
 const countriesRef = db.ref("countries");
 
-countriesRef.on("value", snapshot => {
-  const countries = snapshot.val() || {};
-  const rankingList = document.getElementById("ranking");
+countriesRef.on("value", () => updateRanking());
 
-  const allCountries = {};
-  const countryList = Object.keys(countryCodeMap);
+function updateRanking() {
+  countriesRef.once("value").then(snapshot => {
+    const countries = snapshot.val() || {};
+    const rankingList = document.getElementById("ranking");
+    const myCountryBox = document.getElementById("myCountryBox");
 
-  countryList.forEach(name => {
-    allCountries[name] = countries[name] || 0;
-  });
+    const allCountries = {};
+    Object.keys(countryCodeMap).forEach(name => {
+      allCountries[name] = countries[name] || 0;
+    });
 
-  let sortedCountries = Object.entries(allCountries).sort((a, b) => b[1] - a[1]);
+    let sortedCountries = Object.entries(allCountries).sort((a, b) => b[1] - a[1]);
 
-  // 내가 속한 나라를 최상단으로 올리기
-  const myCountryData = sortedCountries.find(([name]) => name === country);
-  sortedCountries = sortedCountries.filter(([name]) => name !== country);
-  if (myCountryData) {
-    sortedCountries.unshift(myCountryData);
-  }
+    const myCountryIndex = sortedCountries.findIndex(([name]) => name === country);
+    const myCountryClicks = sortedCountries[myCountryIndex] ? sortedCountries[myCountryIndex][1] : 0;
 
-  rankingList.innerHTML = "";
-  sortedCountries.forEach(([countryName, clicks], index) => {
-    const listItem = document.createElement("li");
-
-    // 색 지정 (내 나라 고정 제외하고 1~3위만 색 있음)
-    if (index !== 0) { 
-      const realRank = myCountryData ? index : index + 1;
-      if (realRank === 1) listItem.classList.add("gold");
-      else if (realRank === 2) listItem.classList.add("silver");
-      else if (realRank === 3) listItem.classList.add("bronze");
-    }
-
-    listItem.innerHTML = `
-      <div class="country-info">
-        <span class="rank">${index + 1}</span>
-        ${countryNameToFlag(countryName)} <span class="country-name">${countryName}</span>
+    // 내 나라 고정 박스 표시
+    myCountryBox.innerHTML = `
+      <div class="my-country">
+        <b>${country}</b> (현재 순위 ${myCountryIndex + 1}위) 클릭수: ${myCountryClicks.toLocaleString()}
       </div>
-      <div class="click-count">${clicks.toLocaleString()}</div>
     `;
 
-    rankingList.appendChild(listItem);
+    rankingList.innerHTML = "";
+    sortedCountries.forEach(([countryName, clicks], index) => {
+      const listItem = document.createElement("li");
+
+      if (index === 0) listItem.classList.add("gold");
+      else if (index === 1) listItem.classList.add("silver");
+      else if (index === 2) listItem.classList.add("bronze");
+
+      listItem.innerHTML = `
+        <div class="country-info">
+          <span class="rank">${index + 1}</span>
+          ${countryNameToFlag(countryName)} <span class="country-name">${countryName}</span>
+        </div>
+        <div class="click-count">${clicks.toLocaleString()}</div>
+      `;
+
+      rankingList.appendChild(listItem);
+    });
   });
-});
+}
 
 const countryCodeMap = {
-"Afghanistan":"af","Albania":"al","Algeria":"dz","Andorra":"ad","Angola":"ao","Antigua and Barbuda":"ag","Argentina":"ar","Armenia":"am","Australia":"au","Austria":"at","Azerbaijan":"az",
-"Bahamas":"bs","Bahrain":"bh","Bangladesh":"bd","Barbados":"bb","Belarus":"by","Belgium":"be","Belize":"bz","Benin":"bj","Bhutan":"bt","Bolivia":"bo","Bosnia and Herzegovina":"ba",
-"Botswana":"bw","Brazil":"br","Brunei":"bn","Bulgaria":"bg","Burkina Faso":"bf","Burundi":"bi","Cabo Verde":"cv","Cambodia":"kh","Cameroon":"cm","Canada":"ca","Central African Republic":"cf",
-"Chad":"td","Chile":"cl","China":"cn","Colombia":"co","Comoros":"km","Congo":"cg","Costa Rica":"cr","Croatia":"hr","Cuba":"cu","Cyprus":"cy","Czechia":"cz","Democratic Republic of the Congo":"cd",
-"Denmark":"dk","Djibouti":"dj","Dominica":"dm","Dominican Republic":"do","Ecuador":"ec","Egypt":"eg","El Salvador":"sv","Equatorial Guinea":"gq","Eritrea":"er","Estonia":"ee","Eswatini":"sz",
-"Ethiopia":"et","Fiji":"fj","Finland":"fi","France":"fr","Gabon":"ga","Gambia":"gm","Georgia":"ge","Germany":"de","Ghana":"gh","Greece":"gr","Grenada":"gd","Guatemala":"gt","Guinea":"gn",
-"Guinea-Bissau":"gw","Guyana":"gy","Haiti":"ht","Honduras":"hn","Hungary":"hu","Iceland":"is","India":"in","Indonesia":"id","Iran":"ir","Iraq":"iq","Ireland":"ie","Israel":"il","Italy":"it",
-"Jamaica":"jm","Japan":"jp","Jordan":"jo","Kazakhstan":"kz","Kenya":"ke","Kiribati":"ki","Kuwait":"kw","Kyrgyzstan":"kg","Laos":"la","Latvia":"lv","Lebanon":"lb","Lesotho":"ls","Liberia":"lr",
-"Libya":"ly","Liechtenstein":"li","Lithuania":"lt","Luxembourg":"lu","Madagascar":"mg","Malawi":"mw","Malaysia":"my","Maldives":"mv","Mali":"ml","Malta":"mt","Marshall Islands":"mh",
-"Mauritania":"mr","Mauritius":"mu","Mexico":"mx","Micronesia":"fm","Moldova":"md","Monaco":"mc","Mongolia":"mn","Montenegro":"me","Morocco":"ma","Mozambique":"mz","Myanmar":"mm",
-"Namibia":"na","Nauru":"nr","Nepal":"np","Netherlands":"nl","New Zealand":"nz","Nicaragua":"ni","Niger":"ne","Nigeria":"ng","North Korea":"kp","North Macedonia":"mk","Norway":"no",
-"Oman":"om","Pakistan":"pk","Palau":"pw","Palestine":"ps","Panama":"pa","Papua New Guinea":"pg","Paraguay":"py","Peru":"pe","Philippines":"ph","Poland":"pl","Portugal":"pt","Qatar":"qa",
-"Romania":"ro","Russia":"ru","Rwanda":"rw","Saint Kitts and Nevis":"kn","Saint Lucia":"lc","Saint Vincent and the Grenadines":"vc","Samoa":"ws","San Marino":"sm","Sao Tome and Principe":"st",
-"Saudi Arabia":"sa","Senegal":"sn","Serbia":"rs","Seychelles":"sc","Sierra Leone":"sl","Singapore":"sg","Slovakia":"sk","Slovenia":"si","Solomon Islands":"sb","Somalia":"so","South Africa":"za",
-"South Korea":"kr","South Sudan":"ss","Spain":"es","Sri Lanka":"lk","Sudan":"sd","Suriname":"sr","Sweden":"se","Switzerland":"ch","Syria":"sy","Tajikistan":"tj","Tanzania":"tz","Thailand":"th",
-"Timor-Leste":"tl","Togo":"tg","Tonga":"to","Trinidad and Tobago":"tt","Tunisia":"tn","Turkey":"tr","Turkmenistan":"tm","Tuvalu":"tv","Uganda":"ug","Ukraine":"ua","United Arab Emirates":"ae",
-"United Kingdom":"gb","United States":"us","Uruguay":"uy","Uzbekistan":"uz","Vanuatu":"vu","Vatican City":"va","Venezuela":"ve","Vietnam":"vn","Yemen":"ye","Zambia":"zm","Zimbabwe":"zw","Unknown":""
+"South Korea":"kr","United States":"us","Japan":"jp","China":"cn","United Kingdom":"gb","Germany":"de","France":"fr","Italy":"it","Brazil":"br","Russia":"ru","Spain":"es","Mexico":"mx","India":"in","Canada":"ca","Australia":"au","Unknown":"un",
+"Afghanistan":"af","Albania":"al","Algeria":"dz","Andorra":"ad","Angola":"ao","Antigua and Barbuda":"ag","Argentina":"ar","Armenia":"am","Austria":"at","Azerbaijan":"az","Bahamas":"bs","Bahrain":"bh","Bangladesh":"bd","Barbados":"bb","Belarus":"by",
+"Belgium":"be","Belize":"bz","Benin":"bj","Bhutan":"bt","Bolivia":"bo","Bosnia and Herzegovina":"ba","Botswana":"bw","Brunei":"bn","Bulgaria":"bg","Burkina Faso":"bf","Burundi":"bi","Cambodia":"kh","Cameroon":"cm","Central African Republic":"cf",
+"Chad":"td","Chile":"cl","Colombia":"co","Comoros":"km","Congo":"cg","Costa Rica":"cr","Croatia":"hr","Cuba":"cu","Cyprus":"cy","Czechia":"cz","Democratic Republic of the Congo":"cd","Denmark":"dk","Djibouti":"dj","Dominica":"dm",
+"Dominican Republic":"do","Ecuador":"ec","Egypt":"eg","El Salvador":"sv","Equatorial Guinea":"gq","Eritrea":"er","Estonia":"ee","Eswatini":"sz","Ethiopia":"et","Fiji":"fj","Finland":"fi","Gabon":"ga","Gambia":"gm","Georgia":"ge",
+"Ghana":"gh","Greece":"gr","Grenada":"gd","Guatemala":"gt","Guinea":"gn","Guinea-Bissau":"gw","Guyana":"gy","Haiti":"ht","Honduras":"hn","Hungary":"hu","Iceland":"is","Indonesia":"id","Iran":"ir","Iraq":"iq","Ireland":"ie","Israel":"il",
+"Italy":"it","Jamaica":"jm","Jordan":"jo","Kazakhstan":"kz","Kenya":"ke","Kiribati":"ki","Kuwait":"kw","Kyrgyzstan":"kg","Laos":"la","Latvia":"lv","Lebanon":"lb","Lesotho":"ls","Liberia":"lr","Libya":"ly","Liechtenstein":"li",
+"Lithuania":"lt","Luxembourg":"lu","Madagascar":"mg","Malawi":"mw","Malaysia":"my","Maldives":"mv","Mali":"ml","Malta":"mt","Marshall Islands":"mh","Mauritania":"mr","Mauritius":"mu","Micronesia":"fm","Moldova":"md","Monaco":"mc",
+"Mongolia":"mn","Montenegro":"me","Morocco":"ma","Mozambique":"mz","Myanmar":"mm","Namibia":"na","Nauru":"nr","Nepal":"np","Netherlands":"nl","New Zealand":"nz","Nicaragua":"ni","Niger":"ne","Nigeria":"ng","North Korea":"kp",
+"North Macedonia":"mk","Norway":"no","Oman":"om","Pakistan":"pk","Palau":"pw","Palestine":"ps","Panama":"pa","Papua New Guinea":"pg","Paraguay":"py","Peru":"pe","Philippines":"ph","Poland":"pl","Portugal":"pt","Qatar":"qa",
+"Romania":"ro","Rwanda":"rw","Saint Kitts and Nevis":"kn","Saint Lucia":"lc","Saint Vincent and the Grenadines":"vc","Samoa":"ws","San Marino":"sm","Sao Tome and Principe":"st","Saudi Arabia":"sa","Senegal":"sn","Serbia":"rs",
+"Seychelles":"sc","Sierra Leone":"sl","Singapore":"sg","Slovakia":"sk","Slovenia":"si","Solomon Islands":"sb","Somalia":"so","South Africa":"za","South Sudan":"ss","Sri Lanka":"lk","Sudan":"sd","Suriname":"sr","Sweden":"se",
+"Switzerland":"ch","Syria":"sy","Tajikistan":"tj","Tanzania":"tz","Thailand":"th","Timor-Leste":"tl","Togo":"tg","Tonga":"to","Trinidad and Tobago":"tt","Tunisia":"tn","Turkey":"tr","Turkmenistan":"tm","Tuvalu":"tv","Uganda":"ug",
+"Ukraine":"ua","United Arab Emirates":"ae","Uruguay":"uy","Uzbekistan":"uz","Vanuatu":"vu","Vatican City":"va","Venezuela":"ve","Vietnam":"vn","Yemen":"ye","Zambia":"zm","Zimbabwe":"zw"
 };
 
 function countryNameToFlag(name) {
