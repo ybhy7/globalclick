@@ -1,22 +1,76 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>Global Click Battle!</title>
-<style>
-body {font-family: Arial; text-align: center; background-color: #f7f7f7;}
-h1 {font-size: 32px; margin-top: 20px;}
-p {font-size: 24px;}
-button {font-size: 28px; padding: 15px 30px; margin: 20px 0;}
-h2 {font-size: 28px; margin-top: 40px;}
-ul {list-style-type: none; padding: 0; max-width: 600px; margin: 0 auto;}
-li {font-size: 22px; margin: 10px 0; text-align: left; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1);}
-.rank-item {display: flex; justify-content: space-between; align-items: center;}
-.country-info {display: flex; align-items: center; max-width: 400px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-.country-info img {margin-right: 10px; vertical-align: middle;}
-.country-rank {margin-right: 10px;} /* 순위와 국기 사이 여백 추가 */
-.click-count {min-width: 100px; text-align: right; font-family: monospace; font-weight: bold;} /* 클릭수 굵게 */
-</style>
+  <style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f0f0;
+  }
+
+  button {
+    font-size: 28px;
+    padding: 15px 30px;
+    margin: 20px 0;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  li {
+    font-size: 22px;
+    margin: 10px 0;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .country-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+  }
+
+  .rank {
+    font-weight: bold;
+    width: 40px;
+    text-align: right;
+    color: #555;
+  }
+
+  .country-name {
+    font-weight: bold;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .click-count {
+    font-weight: bold;
+    font-size: 24px;
+    color: #333;
+    min-width: 80px;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  img {
+    width: 24px;
+    height: 18px;
+  }
+  </style>
+
+  <title>Global Click Battle!</title>
 </head>
 <body>
 
@@ -33,7 +87,9 @@ li {font-size: 22px; margin: 10px 0; text-align: left; background: white; paddin
 const firebaseConfig = {
   databaseURL: "https://globalclick-63086-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
+
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.database();
 
 let country = "Unknown";
@@ -43,7 +99,7 @@ fetch('https://ipapi.co/json/')
   .then(response => response.json())
   .then(data => {
     country = data.country_name;
-    countryCode = data.country_code || "UN";
+    countryCode = data.country_code;
   });
 
 let myClickCount = parseInt(localStorage.getItem("myClickCount")) || 0;
@@ -51,73 +107,79 @@ document.getElementById("count").innerText = myClickCount;
 
 function clickButton() {
   const countryRef = db.ref("countries/" + country);
-  countryRef.get().then(snapshot => {
+
+  countryRef.get().then((snapshot) => {
     let currentCount = snapshot.val() || 0;
     countryRef.set(currentCount + 1);
   });
+
   myClickCount++;
   document.getElementById("count").innerText = myClickCount;
   localStorage.setItem("myClickCount", myClickCount);
 }
 
-const countryCodes = {
-  "AF":"Afghanistan","AL":"Albania","DZ":"Algeria","AD":"Andorra","AO":"Angola","AG":"Antigua and Barbuda","AR":"Argentina","AM":"Armenia","AU":"Australia",
-  "AT":"Austria","AZ":"Azerbaijan","BS":"Bahamas","BH":"Bahrain","BD":"Bangladesh","BB":"Barbados","BY":"Belarus","BE":"Belgium","BZ":"Belize","BJ":"Benin",
-  "BT":"Bhutan","BO":"Bolivia","BA":"Bosnia and Herzegovina","BW":"Botswana","BR":"Brazil","BN":"Brunei","BG":"Bulgaria","BF":"Burkina Faso","BI":"Burundi",
-  "KH":"Cambodia","CM":"Cameroon","CA":"Canada","CV":"Cape Verde","CF":"Central African Republic","TD":"Chad","CL":"Chile","CN":"China","CO":"Colombia",
-  "KM":"Comoros","CG":"Congo","CR":"Costa Rica","HR":"Croatia","CU":"Cuba","CY":"Cyprus","CZ":"Czech Republic","DK":"Denmark","DJ":"Djibouti","DO":"Dominican Republic",
-  "EC":"Ecuador","EG":"Egypt","SV":"El Salvador","GQ":"Equatorial Guinea","ER":"Eritrea","EE":"Estonia","ET":"Ethiopia","FJ":"Fiji","FI":"Finland","FR":"France",
-  "GA":"Gabon","GM":"Gambia","GE":"Georgia","DE":"Germany","GH":"Ghana","GR":"Greece","GD":"Grenada","GT":"Guatemala","GN":"Guinea","GW":"Guinea-Bissau",
-  "GY":"Guyana","HT":"Haiti","HN":"Honduras","HU":"Hungary","IS":"Iceland","IN":"India","ID":"Indonesia","IR":"Iran","IQ":"Iraq","IE":"Ireland",
-  "IL":"Israel","IT":"Italy","JM":"Jamaica","JP":"Japan","JO":"Jordan","KZ":"Kazakhstan","KE":"Kenya","KI":"Kiribati","KR":"South Korea","KW":"Kuwait",
-  "KG":"Kyrgyzstan","LA":"Laos","LV":"Latvia","LB":"Lebanon","LS":"Lesotho","LR":"Liberia","LY":"Libya","LI":"Liechtenstein","LT":"Lithuania","LU":"Luxembourg",
-  "MO":"Macau","MG":"Madagascar","MW":"Malawi","MY":"Malaysia","MV":"Maldives","ML":"Mali","MT":"Malta","MH":"Marshall Islands","MR":"Mauritania","MU":"Mauritius",
-  "MX":"Mexico","FM":"Micronesia","MD":"Moldova","MC":"Monaco","MN":"Mongolia","ME":"Montenegro","MA":"Morocco","MZ":"Mozambique","MM":"Myanmar","NA":"Namibia",
-  "NR":"Nauru","NP":"Nepal","NL":"Netherlands","NZ":"New Zealand","NI":"Nicaragua","NE":"Niger","NG":"Nigeria","NO":"Norway","OM":"Oman","PK":"Pakistan",
-  "PW":"Palau","PA":"Panama","PG":"Papua New Guinea","PY":"Paraguay","PE":"Peru","PH":"Philippines","PL":"Poland","PT":"Portugal","QA":"Qatar","RO":"Romania",
-  "RU":"Russia","RW":"Rwanda","KN":"Saint Kitts and Nevis","LC":"Saint Lucia","VC":"Saint Vincent","WS":"Samoa","SM":"San Marino","ST":"Sao Tome and Principe",
-  "SA":"Saudi Arabia","SN":"Senegal","RS":"Serbia","SC":"Seychelles","SL":"Sierra Leone","SG":"Singapore","SK":"Slovakia","SI":"Slovenia","SB":"Solomon Islands",
-  "SO":"Somalia","ZA":"South Africa","ES":"Spain","LK":"Sri Lanka","SD":"Sudan","SR":"Suriname","SE":"Sweden","CH":"Switzerland","SY":"Syria","TW":"Taiwan",
-  "TJ":"Tajikistan","TZ":"Tanzania","TH":"Thailand","TL":"Timor-Leste","TG":"Togo","TO":"Tonga","TT":"Trinidad and Tobago","TN":"Tunisia","TR":"Turkey",
-  "TM":"Turkmenistan","TV":"Tuvalu","UG":"Uganda","UA":"Ukraine","AE":"United Arab Emirates","GB":"United Kingdom","US":"United States","UY":"Uruguay","UZ":"Uzbekistan",
-  "VU":"Vanuatu","VE":"Venezuela","VN":"Vietnam","YE":"Yemen","ZM":"Zambia","ZW":"Zimbabwe","UN":"Unknown"
-};
-
-function getFlag(code) {
-  if (code === "UN") return `<span style="display:inline-block; width:24px; height:18px; background:#ccc; border-radius:3px; margin-right:5px;"></span>`;
-  return `<img src="https://flagcdn.com/24x18/${code.toLowerCase()}.png" style="vertical-align:middle; margin-right:5px;">`;
-}
-
 const countriesRef = db.ref("countries");
 
-countriesRef.on("value", snapshot => {
+countriesRef.on("value", (snapshot) => {
   const countries = snapshot.val() || {};
   const rankingList = document.getElementById("ranking");
 
-  const merged = {};
-  Object.keys(countryCodes).forEach(code => {
-    const name = countryCodes[code];
-    merged[name] = countries[name] || 0;
+  const allCountries = {};
+  const countryList = [
+    "Afghanistan","Albania","Algeria","Andorra","Angola","Antigua and Barbuda","Argentina","Armenia","Australia","Austria","Azerbaijan","Bahamas",
+    "Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bhutan","Bolivia","Bosnia and Herzegovina","Botswana","Brazil","Brunei",
+    "Bulgaria","Burkina Faso","Burundi","Cabo Verde","Cambodia","Cameroon","Canada","Central African Republic","Chad","Chile","China","Colombia",
+    "Comoros","Congo","Costa Rica","Croatia","Cuba","Cyprus","Czechia","Democratic Republic of the Congo","Denmark","Djibouti","Dominica","Dominican Republic",
+    "Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia",
+    "Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana","Haiti","Honduras","Hungary","Iceland","India","Indonesia",
+    "Iran","Iraq","Ireland","Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Laos","Latvia","Lebanon",
+    "Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands",
+    "Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal",
+    "Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia","Norway","Oman","Pakistan","Palau","Palestine","Panama",
+    "Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Kitts and Nevis","Saint Lucia",
+    "Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone",
+    "Singapore","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname",
+    "Sweden","Switzerland","Syria","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan",
+    "Tuvalu","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City","Venezuela",
+    "Vietnam","Yemen","Zambia","Zimbabwe","Unknown"
+  ];
+
+  countryList.forEach(name => {
+    allCountries[name] = countries[name] || 0;
   });
 
-  const sortedCountries = Object.entries(merged).sort((a, b) => b[1] - a[1]);
+  const sortedCountries = Object.entries(allCountries).sort((a, b) => b[1] - a[1]);
 
   rankingList.innerHTML = "";
   sortedCountries.forEach(([countryName, clicks], index) => {
-    const code = Object.keys(countryCodes).find(key => countryCodes[key] === countryName) || "UN";
     const listItem = document.createElement("li");
-
     listItem.innerHTML = `
-      <div class="rank-item">
-        <div class="country-info"><span class="country-rank">${index + 1}</span> ${getFlag(code)} ${countryName}</div>
-        <div class="click-count">${clicks.toLocaleString()}</div>
-      </div>
+    <div class="country-info">
+      <span class="rank">${index + 1}</span>
+      ${countryNameToFlag(countryName)} <span class="country-name">${countryName}</span>
+    </div>
+    <div class="click-count">${clicks.toLocaleString()}</div>
     `;
-
     rankingList.appendChild(listItem);
   });
 });
+
+function countryNameToFlag(name) {
+  if(name === "Unknown") return "";
+
+  const code = nameToCode(name);
+  return `<img src="https://flagcdn.com/24x18/${code.toLowerCase()}.png">`;
+}
+
+function nameToCode(name) {
+  return name
+    .toUpperCase()
+    .replace(/ /g, "_")
+    .replace(/[^A-Z_]/g, "")
+    .slice(0, 2);
+}
 </script>
+
 </body>
 </html>
 
